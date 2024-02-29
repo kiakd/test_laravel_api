@@ -9,9 +9,9 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $table = "product";
+    protected $table = "products";
     protected $fillable = [
         "name",
-        "file_image",
+        "pathFileName",
     ];
 }

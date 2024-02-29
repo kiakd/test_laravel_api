@@ -11,71 +11,79 @@ use Illuminate\Support\Facades\File;
 class ProductController extends Controller
 {
     //
-    public function index()
-    {
-        return new ProductCollection(Product::all());
+    public function index(){
+       return new ProductCollection(Product::all());
     }
 
-    public function show(Product $product)
-    {
+    public function show(Product $product){
         return new ProductResource($product);
     }
 
-    public function store(Request $request)
-    {
-        $validate = $request->validate([
-            "name"=> "sometimes|required|max:255|string",
-            "file_image"=>"nullable",
+    public function store(Request $request){
+        $request->validate([
+            "name"=> "required|max:255|string",
+            "pathFileName"=> "sometimes|max:255"
         ]);
-        $new_nameImage = null;
-        if($request->hasFile("file_image")){
-            $file = $request->file("file_image");
-            $new_nameImage = rand().".".$file->getClientOriginalExtension();
-            $file->move(public_path("/updates/images"), $new_nameImage);
+        if($request->buffer)
+        {
+            $productImage = $this->uploadImage($request);
         }
         $product = Product::create([
-            "name"=> $validate['name'],
-            "file_image"=> $new_nameImage,
+            "name"=> $request->name,
+            "pathFileName" => $productImage['file_image']
         ]);
         return new ProductResource($product);
     }
 
-    public function update(Request $request, Product $product)
-    {
-        $validate = $request->validate([
+    public function update(Request $request, Product $product){
+        $request->validate([
             "name"=> "sometimes|required|max:255|string",
-            "file_image"=>"sometimes|nullable",
+            "pathFileName"=> "sometimes|max:255|string"
         ]);
-        if(!$product->image){
-            $new_nameImage = null;
+        if($request->buffer)
+        {
+            $productImage = $this->uploadImage($request, $product->pathFileName);
         }
-        if($request->hasFile("file_image")){
-            $file = $request->file("file_image");
-            $path = "updates/images/";
-            $new_nameImage = $path.time().".".$file->getClientOriginalExtension();
-            $file->move(public_path($path), $new_nameImage);
-            if(File::exists($product->file_image))
-            {
-                File::delete($product->file_image);
-            }
+        else
+        {
+            $productImage = (['file_image'=> $product->pathFileName]);
         }
         $product->update([
-            "name"=> $validate['name'],
-            "file_image"=> $new_nameImage,
+            "name"=> $request->name,
+            "pathFileName"=> $productImage['file_image']
         ]);
         return new ProductResource($product);
-
     }
 
-    public function destroy(Product $product)
-    {
+    public function destroy(Product $product){
         $product->delete();
-        if(File::exists($product->file_image))
-            {
-                File::delete($product->file_image);
-            }
-        return response()->noContent();
+        return response()->json(["message"=> "success delete", "status"=> 200],200);
     }
 
+    public function uploadImage($datas, $pathFileImageBefore)
+    {
+        // buffer type and filename
+        $buffer = $datas->buffer;
+        $arrayBuffer = $buffer["data"];
+        $filename = 'image_' . time() . $datas->pathFileName;
+        // convert arraybuffer to string by implode
+        // use  base64_encode
+        $imageData = base64_encode(implode('', array_map(function($e){
+            return pack("C*", $e);
+        }, $arrayBuffer)));
+        // map path
+        $path = "uploads/images/";
+        if(File::exists($pathFileImageBefore) && $pathFileImageBefore)
+            {
+                File::delete($pathFileImageBefore);
+            }
+        // save image to directory public/uploads/images
+        file_put_contents(public_path($path).$filename, base64_decode($imageData));
+        $product = ([
+            'name'=> 'Product'.$filename,
+            'file_image'=> $path.$filename,
+        ]);
+        return $product;
+    }
 
 }

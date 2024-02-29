@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    //
     public function index()
     {
         return new CustomerCollection(Customer::all());
@@ -18,6 +17,7 @@ class CustomerController extends Controller
     public function show(Customer $customer)
     {
         return new CustomerResource($customer);
+
     }
 
     public function store(Request $request)
@@ -25,9 +25,8 @@ class CustomerController extends Controller
         $validate = $request->validate([
             "name"=> "required|max:255|string",
             "email"=> "nullable|max:255|string",
-            "phone"=> "nullable|max:20",
+            "phone"=> "nullable|max:255|string"
         ]);
-
         $customer = Customer::create($validate);
         return new CustomerResource($customer);
     }
@@ -35,11 +34,10 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         $validate = $request->validate([
-            "name"=> "sometimes|required|max:255|string",
-            "email"=> "sometimes|nullable|max:255|string",
-            "phone"=> "sometimes|nullable|max:20",
+            "name"=> "required|max:255|string",
+            "email"=> "sometimes|max:255|string",
+            "phone"=> "sometimes|max:255|string"
         ]);
-
         $customer->update($validate);
         return new CustomerResource($customer);
     }
