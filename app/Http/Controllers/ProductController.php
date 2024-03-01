@@ -28,9 +28,13 @@ class ProductController extends Controller
         {
             $productImage = $this->uploadImage($request);
         }
+        else
+        {
+            $productImage = (['file_image'=> null]);
+        }
         $product = Product::create([
             "name"=> $request->name,
-            "pathFileName" => $productImage['file_image']
+            "pathFileName" => $productImage['file_image'],
         ]);
         return new ProductResource($product);
     }

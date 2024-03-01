@@ -3,6 +3,7 @@
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\LoginPage;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductTestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,3 +24,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::apiResource('product', ProductController::class);
 Route::apiResource('customer', CustomerController::class);
+
+// api test
+Route::get("producttest", [ProductTestController::class,"ProductTest"]);
